@@ -1,0 +1,182 @@
+[
+  {
+    "test_id": 1,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "dmart",
+        "brand": "Amul",
+        "product": "Amul A+ Cheese Slices",
+        "quantity": "400 g"
+      },
+      {
+        "platform": "dmart",
+        "brand": "Amul",
+        "product": "Amul A+ Cheese Slices",
+        "quantity": "200 g"
+      }
+    ]
+  },
+  {
+    "test_id": 2,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "blinkit",
+        "brand": "Amul",
+        "product": "Amul Cheese Slices",
+        "quantity": "750 g"
+      },
+      {
+        "platform": "dmart",
+        "brand": "Amul",
+        "product": "Amul Cheese Slices",
+        "quantity": "100 g"
+      }
+    ]
+  },
+  {
+    "test_id": 3,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "blinkit",
+        "brand": "Amul",
+        "product": "Amul Fresh Malai Paneer",
+        "quantity": "200 g"
+      },
+      {
+        "platform": "zepto",
+        "brand": "Amul",
+        "product": "Amul Fresh Malai Paneer",
+        "quantity": "1 pack"
+      }
+    ]
+  },
+  {
+    "test_id": 4,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "dmart",
+        "brand": "Amul",
+        "product": "Amul Frozen Rasmalai",
+        "quantity": "500 g"
+      },
+      {
+        "platform": "zepto",
+        "brand": "Amul",
+        "product": "Amul Frozen Rasmalai",
+        "quantity": "1 pack"
+      }
+    ]
+  },
+  {
+    "test_id": 5,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "zepto",
+        "brand": "Amul",
+        "product": "Amul Kaju Katri",
+        "quantity": "1 pack"
+      },
+      {
+        "platform": "dmart",
+        "brand": "Amul",
+        "product": "Amul Kaju Katri",
+        "quantity": "500 g"
+      }
+    ]
+  },
+  {
+    "test_id": 6,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "blinkit",
+        "brand": "Amul",
+        "product": "Amul Salted Butter",
+        "quantity": "100 g"
+      },
+      {
+        "platform": "zepto",
+        "brand": "Amul",
+        "product": "Amul Salted Butter",
+        "quantity": "1 pack"
+      }
+    ]
+  },
+  {
+    "test_id": 7,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "blinkit",
+        "brand": "Amul",
+        "product": "Amul Taaza Toned Milk",
+        "quantity": "500 ml"
+      },
+      {
+        "platform": "blinkit",
+        "brand": "Amul",
+        "product": "Amul Taaza Toned Milk",
+        "quantity": "200 ml"
+      }
+    ]
+  },
+  {
+    "test_id": 8,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "dmart",
+        "brand": "Bambino",
+        "product": "Bambino Roasted Vermicelli",
+        "quantity": "850 g"
+      },
+      {
+        "platform": "blinkit",
+        "brand": "Bambino",
+        "product": "Bambino Roasted Vermicelli",
+        "quantity": "850 g"
+      }
+    ]
+  },
+  {
+    "test_id": 9,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "dmart",
+        "brand": "Bansiwala",
+        "product": "Bansiwala Gud Nariyal Barfi",
+        "quantity": "250 g"
+      },
+      {
+        "platform": "zepto",
+        "brand": "Bansiwala",
+        "product": "Bansiwala Gud Nariyal Barfi",
+        "quantity": "1 pack"
+      }
+    ]
+  },
+  {
+    "test_id": 10,
+    "should_match": true,
+    "products": [
+      {
+        "platform": "dmart",
+        "brand": "Bansiwala",
+        "product": "Bansiwala Nariyal Barfi",
+        "quantity": "250 g"
+      },
+      {
+        "platform": "zepto",
+        "brand": "Bansiwala",
+        "product": "Bansiwala Nariyal Barfi",
+        "quantity": "1 pack"
+      }
+    ]
+  }
+]
