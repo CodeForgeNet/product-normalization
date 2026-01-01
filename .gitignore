@@ -11,6 +11,7 @@ ENV/
 # Data files (large CSVs)
 data/*.csv
 output/*.csv
+output/*.json
 
 # Logs
 logs/*.log

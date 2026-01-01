@@ -4,7 +4,7 @@ numpy>=2.1.0
 
 # String Matching & Normalization
 fuzzywuzzy==0.18.0
-# python-Levenshtein==0.23.0  # Commented out - has build issues on Python 3.13
+Levenshtein>=0.25.0  # Python 3.13 compatible version
 
 # NLP & Text Processing
 nltk>=3.8.1
@@ -26,5 +26,5 @@ colorama>=0.4.6       # Colored terminal output
 # Testing
 pytest>=7.4.3
 
-fuzzywuzzy==0.18.0
-python-Levenshtein==0.23.0
+# PostgreSQL Database - Python 3.13 compatible
+psycopg[binary]>=3.1.0  # Modern psycopg3 with binary package
