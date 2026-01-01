@@ -11,7 +11,7 @@ import sys
 import os
 from typing import Optional, Dict, List, Tuple
 from fuzzywuzzy import fuzz
-from datetime import datetime
+
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -342,86 +342,3 @@ def create_fuzzy_matcher(enable_fuzzy: bool = True) -> FuzzyProductMatcher:
     """Create and return a new FuzzyProductMatcher instance"""
     return FuzzyProductMatcher(enable_fuzzy=enable_fuzzy)
 
-
-# ============================================================================
-# MAIN (for testing)
-# ============================================================================
-
-if __name__ == "__main__":
-    print("="*70)
-    print("FUZZY PRODUCT MATCHER MODULE - DEMO")
-    print("="*70)
-    print()
-    
-    # Create fuzzy matcher
-    matcher = FuzzyProductMatcher(enable_fuzzy=True)
-    
-    # Test products - designed to test fuzzy matching
-    test_products = [
-        # Exact match (fingerprint)
-        {'brand_name': 'Amul', 'product_name': 'Butter 100g', 'quantity': '100g'},
-        {'brand_name': 'Amul', 'product_name': 'Butter Pack 100g', 'quantity': '100g'},
-        
-        # Fuzzy match (similar names)
-        {'brand_name': 'Tata Tea', 'product_name': 'Gold Premium 500g', 'quantity': '500g'},
-        {'brand_name': 'Tata Tea', 'product_name': 'Gold 500g', 'quantity': '500g'},
-        {'brand_name': 'Tata', 'product_name': 'Tea Gold Premium', 'quantity': '500g'},
-        
-        # Similar but different brand (should NOT match)
-        {'brand_name': 'Britannia', 'product_name': 'Marie Gold Biscuits', 'quantity': '250g'},
-        {'brand_name': 'Parle', 'product_name': 'Marie Gold Biscuits', 'quantity': '250g'},
-        
-        # Very similar product names (should fuzzy match)
-        {'brand_name': 'Maggi', 'product_name': '2-Minute Masala Noodles', 'quantity': '70g'},
-        {'brand_name': 'Maggi', 'product_name': '2 Minute Instant Masala Noodles', 'quantity': '70g'},
-        
-        # Different quantities (should NOT match even with fuzzy)
-        {'brand_name': 'Amul', 'product_name': 'Cheese Slices', 'quantity': '200g'},
-        {'brand_name': 'Amul', 'product_name': 'Cheese Slices', 'quantity': '400g'},
-    ]
-    
-    print("Processing test products with fuzzy matching...")
-    print()
-    
-    for i, product in enumerate(test_products, 1):
-        print(f"Product {i}:")
-        print(f"  Input: {product['brand_name']} - {product['product_name']} ({product['quantity']})")
-        
-        result = matcher.find_or_create_normalized_product(
-            brand_name=product['brand_name'],
-            product_name=product['product_name'],
-            quantity=product['quantity']
-        )
-        
-        if result:
-            if result['match_type'] == 'new':
-                status = "🆕 NEW"
-            elif result['match_type'] == 'fingerprint':
-                status = f"✅ FINGERPRINT MATCH (100%)"
-            elif result['match_type'] == 'fuzzy':
-                status = f"🎯 FUZZY MATCH ({result['match_score']}%)"
-            else:
-                status = "❓ UNKNOWN"
-            
-            print(f"  {status}")
-            print(f"  Product ID: {result['product_id']}")
-            print(f"  Normalized: {result['brand_name']} - {result['product_name']}")
-        
-        print()
-    
-    # Print statistics
-    matcher.print_statistics()
-    
-    print()
-    print("="*70)
-    print("KEY OBSERVATIONS:")
-    print("="*70)
-    print()
-    print("1. Exact matches (fingerprint) are found instantly")
-    print("2. Fuzzy matching catches similar product names")
-    print("3. Different brands don't match (even if product name is same)")
-    print("4. Different quantities create separate products")
-    print()
-    print("="*70)
-    print("✅ Fuzzy matcher module demo complete!")
-    print("="*70)

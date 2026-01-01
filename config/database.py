@@ -1,9 +1,6 @@
-"""
-Database Configuration and Connection Manager
-"""
 import psycopg
 from psycopg.rows import dict_row
-from psycopg import sql
+
 from contextlib import contextmanager
 import os
 from typing import Optional, List, Dict, Any
@@ -206,23 +203,3 @@ class DatabaseManager:
 # Singleton instance
 db_manager = DatabaseManager()
 
-
-if __name__ == "__main__":
-    # Test the database connection
-    print("Testing database connection...")
-    
-    if db_manager.test_connection():
-        print("✓ Database connection successful!")
-        
-        # Get statistics
-        print("\nDatabase Statistics:")
-        stats = db_manager.get_statistics()
-        print(f"  Normalized Products: {stats['normalized_products_count']}")
-        print(f"  Products: {stats['products_count']}")
-        
-        if stats['products_by_platform']:
-            print("\n  Products by Platform:")
-            for item in stats['products_by_platform']:
-                print(f"    {item['platform']}: {item['count']}")
-    else:
-        print("✗ Database connection failed!")
