@@ -56,30 +56,6 @@ class ProductMatcher:
         quantity: Optional[str] = None,
         category: Optional[str] = None
     ) -> Dict:
-        """
-        Find existing normalized product or create new one using fingerprint
-        
-        Args:
-            brand_name: Raw brand name
-            product_name: Raw product name
-            quantity: Optional quantity string
-            category: Optional category
-            
-        Returns:
-            Dictionary with normalized product info including 'product_id'
-            
-        Example:
-            Input: ("Amul", "Butter 100g", "100g", "Dairy")
-            Output: {
-                'product_id': 1,
-                'brand_name': 'amul',
-                'product_name': 'amul butter',
-                'quantity': '100g',
-                'fingerprint': '100_amul_butter_gram',
-                'category': 'Dairy',
-                'is_new': False
-            }
-        """
         self.stats['total_products_processed'] += 1
         
         try:
