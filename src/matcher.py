@@ -1,10 +1,7 @@
 """
-Product Matching Module - Stage 1: Fingerprint Matching
+Product Matching Module - Multi-Stage Matching Engine
 
 File Location: product-normalization-hackathon/src/matcher.py
-
-This module implements the fingerprint-based exact matching engine
-for identifying duplicate products across platforms.
 """
 
 import sys
@@ -15,7 +12,86 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.normalizer import TextNormalizer
+from normalizer import normalize_brand, normalize_product_name, normalize_quantity, create_fingerprint
+
+# Don't import fuzzy_matcher here to avoid circular import
+# from src.fuzzy_matcher import fuzzy_match_product  # REMOVED
+
+
+def find_or_create_normalized_product(row, db_manager) -> Tuple[int, str]:
+    """
+    Find existing normalized product or create new one using multi-stage matching
+    
+    This is the main entry point for the matching pipeline used by main.py
+    
+    Args:
+        row: Pandas DataFrame row with product data
+        db_manager: DatabaseManager instance
+        
+    Returns:
+        Tuple of (product_id, match_stage)
+        - product_id: int - ID of normalized product
+        - match_stage: str - 'fingerprint', 'fuzzy', or 'new'
+    """
+    
+    # Extract data from row
+    brand_name = row.get('brand_name', '')
+    product_name = row.get('product_name', '')
+    quantity = row.get('quantity', '')
+    category = row.get('category', '')
+    
+    # Get normalized values
+    brand_norm = row.get('brand_normalized', normalize_brand(brand_name))
+    product_norm = row.get('product_normalized', normalize_product_name(product_name))
+    quantity_norm = row.get('quantity_normalized', normalize_quantity(quantity))
+    # Sanitize quantity_norm (convert dict to string if needed)
+    if isinstance(quantity_norm, dict):
+        val = quantity_norm.get('value', 0)
+        unit = quantity_norm.get('unit', '')
+        # Format integer values without decimal point
+        if val == int(val):
+            val = int(val)
+        quantity_norm = f"{val} {unit}"
+    
+    # Sanitize category (handle NaN/float)
+    if category is not None and not isinstance(category, str):
+        category = None
+        
+    fingerprint = row.get('fingerprint', create_fingerprint(brand_norm, product_norm, quantity_norm))
+    
+    # Stage 1: Try fingerprint matching
+    existing_product = db_manager.find_normalized_product_by_fingerprint(fingerprint)
+    if existing_product:
+        return existing_product['id'], 'fingerprint'
+    
+    # Stage 2: Try fuzzy matching (import here to avoid circular dependency)
+    try:
+        from fuzzy_matcher import fuzzy_match_product
+        
+        fuzzy_match = fuzzy_match_product(
+            brand_normalized=brand_norm,
+            product_normalized=product_norm,
+            quantity_normalized=quantity_norm,
+            db_manager=db_manager
+        )
+        
+        if fuzzy_match:
+            return fuzzy_match['id'], 'fuzzy'
+    except ImportError:
+        # If fuzzy matcher not available, skip this stage
+        pass
+    
+
+    # Stage 3: Create new normalized product
+    new_product_id = db_manager.insert_normalized_product(
+        fingerprint=fingerprint,
+        brand_name=brand_norm,
+        product_name=product_norm,
+        quantity=quantity_norm,
+        category=category
+    )
+    
+    return new_product_id, 'new'
 
 
 class ProductMatcher:
@@ -28,7 +104,6 @@ class ProductMatcher:
     
     def __init__(self):
         """Initialize the matcher with normalizer and storage"""
-        self.normalizer = TextNormalizer()
         
         # In-memory storage for normalized products
         # Key: fingerprint, Value: normalized_product dict
@@ -49,25 +124,38 @@ class ProductMatcher:
     # CORE MATCHING LOGIC
     # ========================================================================
     
-    def find_or_create_normalized_product(
+    def find_or_create_normalized_product_standalone(
         self,
         brand_name: str,
         product_name: str,
         quantity: Optional[str] = None,
         category: Optional[str] = None
     ) -> Dict:
+        """
+        Find existing normalized product or create new one using fingerprint
+        
+        Args:
+            brand_name: Raw brand name
+            product_name: Raw product name
+            quantity: Optional quantity string
+            category: Optional category
+            
+        Returns:
+            Dictionary with normalized product info including 'product_id'
+        """
         self.stats['total_products_processed'] += 1
         
         try:
             # Normalize components
-            brand_norm = self.normalizer.normalize_brand(brand_name)
-            product_norm = self.normalizer.normalize_product_name(product_name)
+            brand_norm = normalize_brand(brand_name)
+            product_norm = normalize_product_name(product_name)
+            quantity_norm = normalize_quantity(quantity) if quantity else ''
             
             # Create fingerprint
-            fingerprint = self.normalizer.create_fingerprint(
-                brand_name,
-                product_name,
-                quantity
+            fingerprint = create_fingerprint(
+                brand_norm,
+                product_norm,
+                quantity_norm
             )
             
             # Check if fingerprint exists
@@ -114,21 +202,7 @@ class ProductMatcher:
         original_brand: str,
         original_product: str
     ) -> Dict:
-        """
-        Create a new normalized product entry
-        
-        Args:
-            brand_norm: Normalized brand name
-            product_norm: Normalized product name
-            quantity: Original quantity string
-            category: Product category
-            fingerprint: Generated fingerprint
-            original_brand: Original brand name (for reference)
-            original_product: Original product name (for reference)
-            
-        Returns:
-            Dictionary with normalized product information
-        """
+        """Create a new normalized product entry"""
         normalized_product = {
             'product_id': self.next_normalized_id,
             'fingerprint': fingerprint,
@@ -153,17 +227,7 @@ class ProductMatcher:
         products: List[Dict],
         batch_size: int = 1000
     ) -> List[Dict]:
-        """
-        Process a batch of products and assign product_ids
-        
-        Args:
-            products: List of product dictionaries with keys:
-                      'brand_name', 'product_name', 'quantity', 'category'
-            batch_size: Number of products to process at once
-            
-        Returns:
-            List of products with added 'product_id' field
-        """
+        """Process a batch of products and assign product_ids"""
         results = []
         total = len(products)
         
@@ -179,7 +243,7 @@ class ProductMatcher:
             
             batch_results = []
             for product in batch:
-                normalized = self.find_or_create_normalized_product(
+                normalized = self.find_or_create_normalized_product_standalone(
                     brand_name=product.get('brand_name', ''),
                     product_name=product.get('product_name', ''),
                     quantity=product.get('quantity'),
@@ -187,7 +251,6 @@ class ProductMatcher:
                 )
                 
                 if normalized:
-                    # Add product_id to original product
                     product_with_id = product.copy()
                     product_with_id['product_id'] = normalized['product_id']
                     product_with_id['normalized_brand'] = normalized['brand_name']
@@ -207,12 +270,7 @@ class ProductMatcher:
     # ========================================================================
     
     def get_statistics(self) -> Dict:
-        """
-        Get matching statistics
-        
-        Returns:
-            Dictionary with statistics
-        """
+        """Get matching statistics"""
         total_processed = self.stats['total_products_processed']
         fingerprint_matches = self.stats['fingerprint_matches']
         
@@ -248,52 +306,22 @@ class ProductMatcher:
         print("="*70)
     
     def get_normalized_products_list(self) -> List[Dict]:
-        """
-        Get list of all normalized products
-        
-        Returns:
-            List of normalized product dictionaries
-        """
+        """Get list of all normalized products"""
         return list(self.fingerprint_index.values())
     
     def get_normalized_product_by_id(self, product_id: int) -> Optional[Dict]:
-        """
-        Get normalized product by product_id
-        
-        Args:
-            product_id: Product ID to lookup
-            
-        Returns:
-            Normalized product dict or None
-        """
+        """Get normalized product by product_id"""
         for normalized_product in self.fingerprint_index.values():
             if normalized_product['product_id'] == product_id:
                 return normalized_product
         return None
     
     def get_products_by_fingerprint(self, fingerprint: str) -> Optional[Dict]:
-        """
-        Get normalized product by fingerprint
-        
-        Args:
-            fingerprint: Fingerprint to lookup
-            
-        Returns:
-            Normalized product dict or None
-        """
+        """Get normalized product by fingerprint"""
         return self.fingerprint_index.get(fingerprint)
     
-    # ========================================================================
-    # EXPORT METHODS
-    # ========================================================================
-    
     def export_normalized_products_to_dict(self) -> List[Dict]:
-        """
-        Export normalized products for saving to CSV
-        
-        Returns:
-            List of dictionaries ready for DataFrame conversion
-        """
+        """Export normalized products for saving to CSV"""
         export_data = []
         
         for normalized_product in self.fingerprint_index.values():
@@ -310,73 +338,8 @@ class ProductMatcher:
             })
         
         return export_data
-    
-    # ========================================================================
-    # DEBUG & INSPECTION
-    # ========================================================================
-    
-    def find_duplicates_by_brand_product(self, limit: int = 10) -> List[Dict]:
-        """
-        Find products with same brand+product but different quantities
-        (these should have different fingerprints)
-        
-        Args:
-            limit: Maximum number of examples to return
-            
-        Returns:
-            List of duplicate groups
-        """
-        # Group by brand + product (without quantity)
-        groups = {}
-        
-        for normalized in self.fingerprint_index.values():
-            key = f"{normalized['brand_name']}|||{normalized['product_name']}"
-            if key not in groups:
-                groups[key] = []
-            groups[key].append(normalized)
-        
-        # Find groups with multiple entries
-        duplicates = []
-        for key, items in groups.items():
-            if len(items) > 1:
-                duplicates.append({
-                    'brand_product': key,
-                    'count': len(items),
-                    'variants': items
-                })
-        
-        # Sort by count descending
-        duplicates.sort(key=lambda x: x['count'], reverse=True)
-        
-        return duplicates[:limit]
-    
-    def inspect_fingerprint(self, fingerprint: str):
-        """
-        Inspect a fingerprint and show what it matches
-        
-        Args:
-            fingerprint: Fingerprint to inspect
-        """
-        product = self.get_products_by_fingerprint(fingerprint)
-        
-        if product:
-            print(f"Fingerprint: {fingerprint}")
-            print(f"  Product ID: {product['product_id']}")
-            print(f"  Brand: {product['brand_name']}")
-            print(f"  Product: {product['product_name']}")
-            print(f"  Quantity: {product.get('quantity', 'N/A')}")
-            print(f"  Category: {product.get('category', 'N/A')}")
-            print(f"  Original Brand: {product.get('original_brand', 'N/A')}")
-            print(f"  Original Product: {product.get('original_product', 'N/A')}")
-        else:
-            print(f"Fingerprint not found: {fingerprint}")
 
-
-# ============================================================================
-# CONVENIENCE FUNCTIONS
-# ============================================================================
 
 def create_matcher() -> ProductMatcher:
     """Create and return a new ProductMatcher instance"""
     return ProductMatcher()
-

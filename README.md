@@ -106,7 +106,7 @@ product-normalization-hackathon/
 │
 ├── src/
 │   ├── main.py            # Entry point
-│   ├── config.py          # Configuration settings
+│   ├── app_config.py      # Configuration settings (renamed from config.py)
 │   ├── normalizer.py      # Text normalization functions
 │   ├── matcher.py         # Matching logic
 │   ├── fuzzy_matcher.py   # Fuzzy matching implementation
@@ -116,9 +116,27 @@ product-normalization-hackathon/
     └── test_normalizer.py # Unit tests
 ```
 
+### 3. Check Outputs
+Results are saved to the `output/` directory:
+
+*   **`normalized_products.csv` (The Master Catalog)**:
+    *   A clean, deduplicated list of unique products.
+    *   Each row represents one unique product with a unique `product_id`.
+    *   Acts as the "Gold Standard" reference database.
+
+*   **`products_updated.csv` (The Mapped Input)**:
+    *   The original raw input data enriched with `product_id`.
+    *   Maps every messy input row to the correct normalized entry in the master catalog.
+
+## ⚡ Performance
+The system is optimized for high-throughput processing:
+- **Persistent Database Connections**: Minimizes connection overhead.
+- **Speed**: Processes **~1200+ products/second** (benchmarked on 16k dataset).
+- **Batch Processing**: Efficiently handles large datasets.
+
 ## 🔧 Configuration
 
-Edit `src/config.py` to customize matching thresholds and settings.
+Edit `src/app_config.py` to customize matching thresholds and settings.
 
 ## 🐛 Troubleshooting
 

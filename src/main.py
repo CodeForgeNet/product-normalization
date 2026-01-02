@@ -7,10 +7,10 @@ from datetime import datetime
 # Add src directory to path
 sys.path.append(str(Path(__file__).parent))
 
-from config import *
+from app_config import *
 from normalizer import normalize_brand, normalize_product_name, normalize_quantity, create_fingerprint
 from matcher import find_or_create_normalized_product
-from config.database import DatabaseManager
+from config.database import DatabaseManager, DatabaseConfig
 
 def print_header():
     """Print application header"""
@@ -155,16 +155,17 @@ def save_outputs(df, db_manager):
     
     try:
         # Create output directory if it doesn't exist
-        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        output_path = Path(OUTPUT_DIR)
+        output_path.mkdir(parents=True, exist_ok=True)
         
         # Export normalized products
         normalized_df = db_manager.export_normalized_products()
-        normalized_output = OUTPUT_DIR / "normalized_products.csv"
+        normalized_output = output_path / "normalized_products.csv"
         normalized_df.to_csv(normalized_output, index=False)
         print(f"✅ Saved {len(normalized_df):,} normalized products to: {normalized_output}")
         
         # Export products with mappings
-        products_output = OUTPUT_DIR / "products_updated.csv"
+        products_output = output_path / "products_updated.csv"
         df.to_csv(products_output, index=False)
         print(f"✅ Saved {len(df):,} products with mappings to: {products_output}")
         
@@ -212,8 +213,8 @@ def main():
     try:
         db_manager.connect()
         print("✅ Connected to PostgreSQL database")
-        print(f"   Database: {DB_CONFIG['database']}")
-        print(f"   Host: {DB_CONFIG['host']}:{DB_CONFIG['port']}")
+        print(f"   Database: {DatabaseConfig.DATABASE}")
+        print(f"   Host: {DatabaseConfig.HOST}:{DatabaseConfig.PORT}")
     except Exception as e:
         print(f"❌ ERROR: Could not connect to database: {e}")
         print()

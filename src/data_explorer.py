@@ -506,7 +506,7 @@ def main():
     # Add parent directory to path
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
-    from config import PRODUCTS_INPUT_FILE
+    from app_config import PRODUCTS_INPUT_FILE
     
     if not os.path.exists(PRODUCTS_INPUT_FILE):
         print(f"❌ ERROR: Input file not found: {PRODUCTS_INPUT_FILE}")

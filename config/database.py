@@ -33,10 +33,11 @@ class DatabaseManager:
     def connect(self) -> psycopg.Connection:
         """Establish database connection"""
         try:
-            self._connection = psycopg.connect(
-                self.config.get_connection_string()
-            )
-            logger.info("Database connection established")
+            if self._connection is None or self._connection.closed:
+                self._connection = psycopg.connect(
+                    self.config.get_connection_string()
+                )
+                logger.info("Database connection established")
             return self._connection
         except Exception as e:
             logger.error(f"Database connection failed: {e}")
@@ -44,25 +45,30 @@ class DatabaseManager:
     
     def close(self):
         """Close database connection"""
-        if self._connection:
+        if self._connection and not self._connection.closed:
             self._connection.close()
             logger.info("Database connection closed")
+        self._connection = None
     
     @contextmanager
     def get_cursor(self, row_factory=dict_row):
         """Context manager for database cursor"""
         conn = self.connect()
-        cursor = conn.cursor(row_factory=row_factory)
         try:
-            yield cursor
-            conn.commit()
+            cursor = conn.cursor(row_factory=row_factory)
+            try:
+                yield cursor
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                logger.error(f"Database error: {e}")
+                raise
+            finally:
+                cursor.close()
+                # Do NOT close connection here to allow persistence
         except Exception as e:
-            conn.rollback()
-            logger.error(f"Database error: {e}")
+            logger.error(f"Error creating cursor: {e}")
             raise
-        finally:
-            cursor.close()
-            self.close()
     
     def execute_query(self, query: str, params: tuple = None) -> List[Dict]:
         """Execute a SELECT query and return results"""

@@ -606,7 +606,7 @@ def semantic_similarity(product1, product2):
 
 The two-stage hybrid approach provides:
 - ✅ High accuracy (93.5%)
-- ✅ Fast performance (2,380 products/second)
+- ✅ Fast performance (~1,200+ products/second)
 - ✅ Maintainable codebase
 - ✅ Scalable architecture
 

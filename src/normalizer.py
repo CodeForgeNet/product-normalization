@@ -16,7 +16,7 @@ import os
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.config import (
+from src.app_config import (
     BRAND_ALIASES,
     ALL_STOP_WORDS,
     QUANTITY_UNITS,

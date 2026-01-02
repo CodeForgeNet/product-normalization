@@ -2,7 +2,7 @@
 Configuration file for the product normalization system
 UPDATED based on Phase 1 data analysis findings
 
-File Location: product-normalization-hackathon/src/config.py
+File Location: product-normalization-hackathon/src/app_config.py
 """
 
 import os
