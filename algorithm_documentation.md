@@ -85,13 +85,9 @@ Create a standardized, deterministic string representation of each product that 
 #### Step 1.1: Text Preprocessing
 ```python
 def preprocess_text(text):
-    """
-    Input: "Tata-Tea Gold Premium Pack!"
-    Output: "tata tea gold premium pack"
-    """
-    text = text.lower()                    # Case normalization
-    text = re.sub(r'[^\w\s]', ' ', text)  # Remove punctuation
-    text = re.sub(r'\s+', ' ', text)      # Normalize whitespace
+    text = text.lower()                    
+    text = re.sub(r'[^\w\s]', ' ', text)  
+    text = re.sub(r'\s+', ' ', text)      
     return text.strip()
 ```
 
@@ -102,14 +98,10 @@ BRAND_ALIASES = {
     'hul': 'hindustan unilever',
     'mother dairy': 'motherdairy',
     'mtrc': 'mother dairy',
-    'britania': 'britannia',  # Common misspelling
+    'britania': 'britannia',
 }
 
 def normalize_brand(brand):
-    """
-    Input: "Himalaya Herbals"
-    Output: "himalaya"
-    """
     brand = preprocess_text(brand)
     return BRAND_ALIASES.get(brand, brand)
 ```
@@ -117,23 +109,15 @@ def normalize_brand(brand):
 #### Step 1.3: Stop Words Removal
 ```python
 STOP_WORDS = {
-    # Packaging terms
     'pack', 'bottle', 'jar', 'box', 'tin', 'pouch', 
     'combo', 'set', 'piece', 'pcs',
-    
-    # Common words
     'of', 'with', 'for', 'and', 'the', 'a', 'an',
-    
-    # Descriptive words
     'premium', 'original', 'taste', 'fresh', 'new',
     'special', 'best', 'quality', 'pure'
 }
 
 def remove_stop_words(text):
-    """
-    Input: "tea gold premium pack"
-    Output: "tea gold"
-    """
+   
     words = text.split()
     return ' '.join(w for w in words if w not in STOP_WORDS)
 ```
@@ -148,10 +132,6 @@ QUANTITY_PATTERNS = [
 ]
 
 def normalize_quantity(quantity_str):
-    """
-    Input: "500g" or "0.5kg" or "500 gm"
-    Output: "500_gram"
-    """
     if not quantity_str:
         return ""
     
@@ -185,14 +165,12 @@ def create_fingerprint(brand, product_name, quantity):
     product_clean = remove_stop_words(preprocess_text(product_name))
     quantity_norm = normalize_quantity(quantity)
     
-    # Combine all tokens
     tokens = []
     tokens.extend(brand_norm.split())
     tokens.extend(product_clean.split())
     if quantity_norm:
         tokens.append(quantity_norm)
     
-    # Sort alphabetically for consistency
     tokens = sorted(set(tokens))
     
     return '_'.join(tokens)

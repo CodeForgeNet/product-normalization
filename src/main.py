@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-# Add src directory to path
 sys.path.append(str(Path(__file__).parent))
 
 from app_config import *
@@ -13,28 +12,24 @@ from matcher import find_or_create_normalized_product
 from config.database import DatabaseManager, DatabaseConfig
 
 def print_header():
-    """Print application header"""
     print("=" * 80)
     print(" " * 20 + "PRODUCT NORMALIZATION & COMBINATION SYSTEM")
     print("=" * 80)
     print()
 
 def print_section(title):
-    """Print section header"""
     print()
     print(f"{'─' * 80}")
     print(f"  {title}")
     print(f"{'─' * 80}")
 
 def load_products(file_path):
-    """Load products from CSV file"""
     print_section("📂 LOADING INPUT DATA")
     
     try:
         df_products = pd.read_csv(file_path)
         print(f"✅ Successfully loaded {len(df_products):,} products from {file_path}")
         
-        # Data validation
         required_columns = ['brand_name', 'product_name', 'platform']
         missing_cols = [col for col in required_columns if col not in df_products.columns]
         
@@ -53,7 +48,6 @@ def load_products(file_path):
         return None
 
 def display_data_summary(df):
-    """Display dataset summary statistics"""
     print()
     print("📊 DATASET OVERVIEW:")
     print(f"   ├─ Total Products: {len(df):,}")
@@ -68,7 +62,6 @@ def display_data_summary(df):
     print(f"   └─ Date Range: {df['created_at'].min() if 'created_at' in df.columns else 'N/A'} to {df['created_at'].max() if 'created_at' in df.columns else 'N/A'}")
 
 def normalize_products(df):
-    """Apply normalization to all products"""
     print_section("🧹 NORMALIZING PRODUCTS")
     
     start_time = time.time()
@@ -98,7 +91,6 @@ def normalize_products(df):
     return df
 
 def process_matching(df, db_manager):
-    """Process product matching through multiple stages"""
     print_section("🔍 PRODUCT MATCHING")
     
     stats = {
@@ -113,7 +105,6 @@ def process_matching(df, db_manager):
     
     start_time = time.time()
     
-    # Process each product
     for idx, row in df.iterrows():
         if (idx + 1) % 100 == 0:
             print(f"   Progress: {idx + 1:,}/{len(df):,} ({(idx + 1) / len(df) * 100:.1f}%)", end='\r')
@@ -123,7 +114,6 @@ def process_matching(df, db_manager):
             db_manager=db_manager
         )
         
-        # Update statistics
         if match_stage == 'fingerprint':
             stats['stage1_matches'] += 1
         elif match_stage == 'fuzzy':
@@ -131,10 +121,9 @@ def process_matching(df, db_manager):
         elif match_stage == 'new':
             stats['new_products'] += 1
         
-        # Store product_id back to dataframe
         df.at[idx, 'product_id'] = product_id
     
-    print()  # Clear progress line
+    print()
     elapsed = time.time() - start_time
     
     print()
@@ -150,21 +139,17 @@ def process_matching(df, db_manager):
     return df, stats
 
 def save_outputs(df, db_manager):
-    """Save output files"""
     print_section("💾 SAVING OUTPUTS")
     
     try:
-        # Create output directory if it doesn't exist
         output_path = Path(OUTPUT_DIR)
         output_path.mkdir(parents=True, exist_ok=True)
         
-        # Export normalized products
         normalized_df = db_manager.export_normalized_products()
         normalized_output = output_path / "normalized_products.csv"
         normalized_df.to_csv(normalized_output, index=False)
         print(f"✅ Saved {len(normalized_df):,} normalized products to: {normalized_output}")
         
-        # Export products with mappings
         products_output = output_path / "products_updated.csv"
         df.to_csv(products_output, index=False)
         print(f"✅ Saved {len(df):,} products with mappings to: {products_output}")
@@ -176,7 +161,6 @@ def save_outputs(df, db_manager):
         return False
 
 def print_summary(stats, start_time):
-    """Print final summary"""
     print_section("✨ EXECUTION SUMMARY")
     
     total_time = time.time() - start_time
@@ -193,20 +177,16 @@ def print_summary(stats, start_time):
     print("=" * 80)
 
 def main():
-    """Main execution function"""
-    
     overall_start = time.time()
     
     print_header()
     
-    # Step 1: Load data
     df_products = load_products(PRODUCTS_INPUT_FILE)
     if df_products is None:
         return
     
     display_data_summary(df_products)
     
-    # Step 2: Initialize database
     print_section("🔗 DATABASE CONNECTION")
     db_manager = DatabaseManager()
     
@@ -224,22 +204,16 @@ def main():
         print("   3. Stop local PostgreSQL: brew services stop postgresql")
         return
     
-    # Step 3: Normalize products
     df_products = normalize_products(df_products)
     
-    # Step 4: Process matching
     df_products, stats = process_matching(df_products, db_manager)
     
-    # Step 5: Save outputs
     if not save_outputs(df_products, db_manager):
         print("⚠️  Warning: Output files could not be saved")
     
-    # Step 6: Close database connection
     db_manager.close()
     print()
     print("🔌 Database connection closed")
-    
-    # Step 7: Print summary
     print_summary(stats, overall_start)
 
 if __name__ == "__main__":

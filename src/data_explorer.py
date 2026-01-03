@@ -1,12 +1,3 @@
-"""
-Data Exploration and Analysis Module
-
-File Location: product-normalization-hackathon/src/data_explorer.py
-
-Purpose: Analyze the product dataset to understand patterns,
-         identify edge cases, and prepare for normalization
-"""
-
 import pandas as pd
 import re
 from collections import Counter
@@ -14,15 +5,8 @@ import json
 import os
 
 class DataExplorer:
-    """Explores and analyzes product data"""
-    
+
     def __init__(self, csv_path):
-        """
-        Initialize explorer with CSV file path
-        
-        Args:
-            csv_path: Path to products_table.csv
-        """
         print(f"📂 Loading data from: {csv_path}")
         self.df = pd.read_csv(csv_path)
         self.analysis_results = {}
@@ -30,7 +14,6 @@ class DataExplorer:
         print()
     
     def basic_overview(self):
-        """Generate basic dataset statistics"""
         print("="*70)
         print("1. BASIC DATASET OVERVIEW")
         print("="*70)
@@ -61,7 +44,6 @@ class DataExplorer:
         return results
     
     def analyze_brands(self):
-        """Analyze brand names and find variations"""
         print("="*70)
         print("2. BRAND ANALYSIS")
         print("="*70)
@@ -76,7 +58,6 @@ class DataExplorer:
         print(f"Total Unique Brands: {unique_brands:,}")
         print()
         
-        # Top brands by product count
         print("Top 20 Brands by Product Count:")
         top_brands = brands.value_counts().head(20)
         for i, (brand, count) in enumerate(top_brands.items(), 1):
@@ -84,14 +65,13 @@ class DataExplorer:
         
         print()
         
-        # Find brand variations (similar names)
         print("Potential Brand Variations (for aliases):")
         brand_variations = self._find_brand_variations(brands.unique())
         
         for base_brand, variations in list(brand_variations.items())[:15]:
             if variations:
                 print(f"  '{base_brand}':")
-                for var in variations[:3]:  # Show max 3 variations
+                for var in variations[:3]:  
                     print(f"    → {var}")
         
         print()
@@ -106,20 +86,15 @@ class DataExplorer:
         return results
     
     def _find_brand_variations(self, brands):
-        """Find similar brand names that might be the same brand"""
         variations = {}
         brands_lower = {b: b.lower().strip() for b in brands}
         
-        # Group similar brands
         for brand, brand_lower in brands_lower.items():
-            # Simple heuristic: check for substring matches
             similar = []
             for other_brand, other_lower in brands_lower.items():
                 if brand != other_brand:
-                    # Check if one is substring of another
                     if brand_lower in other_lower or other_lower in brand_lower:
                         similar.append(other_brand)
-                    # Check for common words
                     elif self._has_common_words(brand_lower, other_lower):
                         similar.append(other_brand)
             
@@ -129,14 +104,12 @@ class DataExplorer:
         return variations
     
     def _has_common_words(self, str1, str2):
-        """Check if two strings share common words"""
         words1 = set(str1.split())
         words2 = set(str2.split())
         common = words1 & words2
-        return len(common) >= 2  # At least 2 common words
+        return len(common) >= 2  
     
     def analyze_product_names(self):
-        """Analyze product name patterns"""
         print("="*70)
         print("3. PRODUCT NAME ANALYSIS")
         print("="*70)
@@ -150,7 +123,6 @@ class DataExplorer:
         print(f"Total Unique Product Names: {products.nunique():,}")
         print()
         
-        # Find common words in product names
         all_words = []
         for product in products:
             words = re.findall(r'\b[a-zA-Z]+\b', str(product).lower())
@@ -164,7 +136,6 @@ class DataExplorer:
         
         print()
         
-        # Find packaging terms
         packaging_terms = [
             'pack', 'bottle', 'jar', 'box', 'tin', 'pouch', 'combo',
             'set', 'packet', 'piece', 'pcs', 'container', 'can'
@@ -190,7 +161,6 @@ class DataExplorer:
         return results
     
     def analyze_quantities(self):
-        """Analyze quantity formats and patterns"""
         print("="*70)
         print("4. QUANTITY ANALYSIS")
         print("="*70)
@@ -206,7 +176,6 @@ class DataExplorer:
         print(f"Products with Quantity Info: {len(quantities):,} ({len(quantities)/len(self.df)*100:.1f}%)")
         print()
         
-        # Extract patterns
         patterns = {
             'weight_kg': r'(\d+\.?\d*)\s*(kg|kgs)',
             'weight_g': r'(\d+\.?\d*)\s*(g|gm|gms|gram|grams)',
@@ -238,7 +207,7 @@ class DataExplorer:
         
         print()
         
-        # Sample quantities
+
         print("Sample Quantities (first 20 unique):")
         for i, qty in enumerate(quantities.unique()[:20], 1):
             print(f"  {i:2d}. {qty}")
@@ -256,7 +225,7 @@ class DataExplorer:
         return results
     
     def _extract_quantities_from_names(self):
-        """Try to extract quantities from product names"""
+
         print("   Attempting to extract from product_name column...")
         
         if 'product_name' not in self.df.columns:
@@ -280,7 +249,7 @@ class DataExplorer:
         print()
     
     def analyze_platforms(self):
-        """Analyze platform distribution"""
+
         print("="*70)
         print("5. PLATFORM ANALYSIS")
         print("="*70)
@@ -307,7 +276,7 @@ class DataExplorer:
         return results
     
     def analyze_categories(self):
-        """Analyze product categories"""
+
         print("="*70)
         print("6. CATEGORY ANALYSIS")
         print("="*70)
@@ -339,12 +308,11 @@ class DataExplorer:
         return results
     
     def find_duplicate_patterns(self):
-        """Find potential duplicate products across platforms"""
+
         print("="*70)
         print("7. DUPLICATE PATTERN ANALYSIS")
         print("="*70)
         
-        # Group by brand and product name (case-insensitive)
         self.df['brand_lower'] = self.df['brand_name'].str.lower().str.strip()
         self.df['product_lower'] = self.df['product_name'].str.lower().str.strip()
         
@@ -361,7 +329,6 @@ class DataExplorer:
             
             print()
             
-            # Show example of first duplicate
             if len(duplicates) > 0:
                 first_dup = duplicates.index[0]
                 brand, product = first_dup
@@ -375,10 +342,9 @@ class DataExplorer:
                 print(dup_examples.to_string(index=False))
                 print()
         
-        # Convert tuple keys to strings for JSON serialization
         top_dups_dict = {}
         for (brand, product), count in duplicates.head(20).items():
-            key = f"{brand}|||{product}"  # Use ||| as separator
+            key = f"{brand}|||{product}"  
             top_dups_dict[key] = count
         
         results = {
@@ -390,14 +356,12 @@ class DataExplorer:
         return results
     
     def generate_test_cases(self):
-        """Generate sample test cases for validation"""
         print("="*70)
         print("8. GENERATING TEST CASES")
         print("="*70)
         
         test_cases = []
         
-        # Find products that appear on multiple platforms (likely same product)
         if 'platform' in self.df.columns:
             self.df['brand_product'] = (
                 self.df['brand_name'].str.lower() + '|||' + 
@@ -410,7 +374,6 @@ class DataExplorer:
             print(f"Found {len(multi_platform)} products appearing on multiple platforms")
             print()
             
-            # Create test cases from these
             print("Sample Test Cases (products that should match):")
             print()
             
@@ -438,7 +401,6 @@ class DataExplorer:
                     test_cases.append(test_case)
                     print()
         
-        # Save test cases
         test_cases_file = 'output/test_cases.json'
         with open(test_cases_file, 'w', encoding='utf-8') as f:
             json.dump(test_cases, f, indent=2, ensure_ascii=False)
@@ -448,20 +410,7 @@ class DataExplorer:
         
         return test_cases
     
-    def save_analysis_report(self, output_file='output/data_analysis_report.json'):
-        """Save complete analysis results to JSON"""
-        print("="*70)
-        print("9. SAVING ANALYSIS REPORT")
-        print("="*70)
-        
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(self.analysis_results, f, indent=2, ensure_ascii=False)
-        
-        print(f"✅ Analysis report saved to: {output_file}")
-        print()
-    
     def run_complete_analysis(self):
-        """Run all analysis steps"""
         print("\n")
         print("🔍 STARTING COMPLETE DATA EXPLORATION & ANALYSIS")
         print("="*70)
@@ -477,33 +426,21 @@ class DataExplorer:
         self.generate_test_cases()
         self.save_analysis_report()
         
-        print("="*70)
-        print("✅ PHASE 1 COMPLETE - DATA EXPLORATION FINISHED!")
-        print("="*70)
         print()
         print("Key Findings:")
-        print(f"  • Total Products: {self.analysis_results['basic_overview']['total_products']:,}")
-        print(f"  • Unique Brands: {self.analysis_results['brand_analysis']['unique_brands']:,}")
-        print(f"  • Platforms: {self.analysis_results['platform_analysis']['total_platforms']}")
+        print(f"Total Products: {self.analysis_results['basic_overview']['total_products']:,}")
+        print(f"Unique Brands: {self.analysis_results['brand_analysis']['unique_brands']:,}")
+        print(f"Platforms: {self.analysis_results['platform_analysis']['total_platforms']}")
         
         if 'duplicate_analysis' in self.analysis_results:
-            print(f"  • Potential Duplicates: {self.analysis_results['duplicate_analysis']['duplicate_count']:,}")
+            print(f"Potential Duplicates: {self.analysis_results['duplicate_analysis']['duplicate_count']:,}")
         
-        print()
-        print("📄 Reports Generated:")
-        print("  • output/data_analysis_report.json")
-        print("  • output/test_cases.json")
-        print()
-        print("Next Step: Type 'START PHASE 2' to begin normalization implementation")
-        print()
 
 
 def main():
-    """Main execution for data exploration"""
     import sys
     import os
     
-    # Add parent directory to path
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
     from app_config import PRODUCTS_INPUT_FILE
