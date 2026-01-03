@@ -4,7 +4,6 @@ DROP TABLE IF EXISTS normalized_products CASCADE;
 CREATE TABLE normalized_products (
     id SERIAL PRIMARY KEY,
     fingerprint TEXT UNIQUE NOT NULL,
-    vector TEXT NULL,
     brand_name VARCHAR(255) NOT NULL,
     product_name VARCHAR(255) NOT NULL,
     quantity VARCHAR(100) NULL,

@@ -6,7 +6,7 @@ from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from normalizer import normalize_brand, normalize_product_name, normalize_quantity, create_fingerprint
+from src.normalizer import normalize_brand, normalize_product_name, normalize_quantity, create_fingerprint
 
 def find_or_create_normalized_product(row, db_manager) -> Tuple[int, str]:
 

@@ -4,11 +4,9 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-sys.path.append(str(Path(__file__).parent))
-
-from app_config import *
-from normalizer import normalize_brand, normalize_product_name, normalize_quantity, create_fingerprint
-from matcher import find_or_create_normalized_product
+from src.app_config import *
+from src.normalizer import normalize_brand, normalize_product_name, normalize_quantity, create_fingerprint
+from src.matcher import find_or_create_normalized_product
 from config.database import DatabaseManager, DatabaseConfig
 
 def print_header():

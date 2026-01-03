@@ -75,17 +75,17 @@ class DatabaseManager:
     
     def insert_normalized_product(self, fingerprint: str, brand_name: str, 
                                   product_name: str, quantity: str = None, 
-                                  category: str = None, vector: str = None) -> Optional[int]:
+                                  category: str = None) -> Optional[int]:
         query = """
-        INSERT INTO normalized_products (fingerprint, brand_name, product_name, quantity, category, vector)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO normalized_products (fingerprint, brand_name, product_name, quantity, category)
+        VALUES (%s, %s, %s, %s, %s)
         ON CONFLICT (fingerprint) 
         DO UPDATE SET updated_at = CURRENT_TIMESTAMP
         RETURNING id;
         """
         try:
             with self.get_cursor() as cursor:
-                cursor.execute(query, (fingerprint, brand_name, product_name, quantity, category, vector))
+                cursor.execute(query, (fingerprint, brand_name, product_name, quantity, category))
                 result = cursor.fetchone()
                 return result['id'] if result else None
         except Exception as e:
@@ -146,6 +146,11 @@ class DatabaseManager:
     def get_all_normalized_products(self) -> List[Dict]:
         query = "SELECT * FROM normalized_products ORDER BY id;"
         return self.execute_query(query)
+    
+    def export_normalized_products(self):
+        import pandas as pd
+        products = self.get_all_normalized_products()
+        return pd.DataFrame(products)
     
     def get_statistics(self) -> Dict[str, Any]:
         stats = {}
